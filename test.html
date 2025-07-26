@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Model Loading Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.11.0/dist/tf.min.js"></script>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        #console {
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+    </style>
+</head>
+<body>
+    <h1>Model Loading Test</h1>
+    <div id="console"></div>
+    
+    <script>
+        // Override console.log to display in page
+        const consoleDiv = document.getElementById('console');
+        const originalLog = console.log;
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            const message = args.join(' ');
+            const div = document.createElement('div');
+            
+            if (message.includes('✓')) {
+                div.className = 'success';
+            } else if (message.includes('✗') || message.includes('Error')) {
+                div.className = 'error';
+            } else if (message.includes('===')) {
+                div.className = 'info';
+            }
+            
+            div.textContent = message;
+            consoleDiv.appendChild(div);
+        };
+    </script>
+    <script src="test-model.js"></script>
+</body>
+</html>
