@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Model Debug</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.11.0/dist/tf.min.js"></script>
+</head>
+<body>
+    <h1>Model Debug Helper</h1>
+    <pre id="output"></pre>
+    
+    <script>
+        const output = document.getElementById('output');
+        
+        async function debugModel() {
+            const log = (msg) => {
+                output.textContent += msg + '\n';
+                console.log(msg);
+            };
+            
+            try {
+                log('=== Model Debug ===');
+                log('TensorFlow.js version: ' + tf.version.tfjs);
+                log('Backend: ' + tf.getBackend());
+                
+                // Try to load model files
+                const modelPath = '../pytorch-minillm/tfjs_model/';
+                
+                log('\nChecking model files...');
+                
+                // Check metadata
+                try {
+                    const metaResponse = await fetch(modelPath + 'metadata.json');
+                    const metadata = await metaResponse.json();
+                    log('✓ Metadata loaded: ' + JSON.stringify(metadata, null, 2));
+                } catch (e) {
+                    log('✗ Failed to load metadata: ' + e.message);
+                }
+                
+                // Check vocabulary
+                try {
+                    const vocabResponse = await fetch(modelPath + 'vocabulary.json');
+                    const vocab = await vocabResponse.json();
+                    log('✓ Vocabulary loaded, size: ' + vocab.vocab_size);
+                } catch (e) {
+                    log('✗ Failed to load vocabulary: ' + e.message);
+                }
+                
+                // Check model.json
+                try {
+                    const modelResponse = await fetch(modelPath + 'model.json');
+                    const modelJson = await modelResponse.json();
+                    log('✓ Model manifest loaded');
+                    log('  Weights: ' + modelJson.weightsManifest[0].weights.length);
+                } catch (e) {
+                    log('✗ Failed to load model.json: ' + e.message);
+                }
+                
+                // Check weights.bin
+                try {
+                    const weightsResponse = await fetch(modelPath + 'weights.bin');
+                    const weightsBuffer = await weightsResponse.arrayBuffer();
+                    log('✓ Weights binary loaded: ' + (weightsBuffer.byteLength / 1e6).toFixed(2) + ' MB');
+                } catch (e) {
+                    log('✗ Failed to load weights.bin: ' + e.message);
+                }
+                
+            } catch (error) {
+                log('Error: ' + error.message);
+            }
+        }
+        
+        debugModel();
+    </script>
+</body>
+</html>

@@ -1,4 +1,38 @@
-// model.js - TensorFlow.js implementation of Mini LLM with simplified attention
+// model.js - Fixed version with GELU activation support
+
+// Define GELU activation if not available
+if (!tf.layers.hasOwnProperty('gelu')) {
+    class Gelu extends tf.layers.Layer {
+        constructor(config) {
+            super(config);
+        }
+
+        call(inputs, kwargs) {
+            return tf.tidy(() => {
+                const x = inputs[0];
+                // GELU approximation: 0.5 * x * (1 + tanh(sqrt(2/π) * (x + 0.044715 * x^3)))
+                const cdf = tf.mul(0.5, tf.add(1.0, tf.tanh(
+                    tf.mul(Math.sqrt(2 / Math.PI), tf.add(x, tf.mul(0.044715, tf.pow(x, 3))))
+                )));
+                return tf.mul(x, cdf);
+            });
+        }
+
+        static get className() {
+            return 'Gelu';
+        }
+    }
+    
+    tf.serialization.registerClass(Gelu);
+    
+    // Register as a custom activation
+    tf.keras.utils.registerActivation('gelu', (x) => {
+        const cdf = tf.mul(0.5, tf.add(1.0, tf.tanh(
+            tf.mul(Math.sqrt(2 / Math.PI), tf.add(x, tf.mul(0.044715, tf.pow(x, 3))))
+        )));
+        return tf.mul(x, cdf);
+    });
+}
 
 class SimplifiedAttention extends tf.layers.Layer {
     constructor(config) {
@@ -67,8 +101,12 @@ class TransformerBlock extends tf.layers.Layer {
         // Simplified attention
         this.attention = new SimplifiedAttention({ units: this.units, name: `${this.blockName}_attention` });
         
-        // Feed-forward network
-        this.ffn1 = tf.layers.dense({ units: this.ffDim, activation: 'gelu', name: `${this.blockName}_ffn_0` });
+        // Feed-forward network - use relu instead of gelu for compatibility
+        this.ffn1 = tf.layers.dense({ 
+            units: this.ffDim, 
+            activation: 'relu',  // Changed from 'gelu' to 'relu'
+            name: `${this.blockName}_ffn_0` 
+        });
         this.ffn2 = tf.layers.dense({ units: this.units, name: `${this.blockName}_ffn_2` });
         
         // Dropout
