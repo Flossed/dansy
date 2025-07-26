@@ -1,0 +1,24 @@
+# Node modules
+node_modules/
+npm-debug.log*
+package-lock.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Model files (large binary files - optional)
+# Uncomment if you don't want to store model files in git
+# *.bin
+# tfjs_model/
+
+# Logs
+logs/
+*.log
+
+# Environment variables
+.env
